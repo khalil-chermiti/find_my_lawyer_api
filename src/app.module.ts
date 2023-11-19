@@ -1,17 +1,15 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
 import { AuthenticationModule } from './authentication/authentication.module';
 import { ConfigModule } from '@nestjs/config';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { DatabaseModule } from './common/database/database.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    MongooseModule.forRoot(process.env.MONGODB_URL, {
-      dbName: process.env.MONGODB_DB_NAME,
-    }),
+    DatabaseModule,
     MailerModule.forRoot({
       transport: {
         host: process.env.SMTP_HOST,

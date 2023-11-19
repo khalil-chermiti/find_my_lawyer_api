@@ -41,13 +41,17 @@ export class AuthenticationService {
       );
 
       // enregistrer l'utilisateur
-      const user = await this.loginModel.create({
+      await this.loginModel.create({
         email: loginDTO.email,
         password: hashedPassword,
         actif: true,
         role: role,
       });
+    } catch (e) {
+      throw new BadRequestException("erreur lors de l'enregistrement");
+    }
 
+    try {
       // envoyer un email de salutation
       this.mailerService
         .sendMail({
@@ -63,6 +67,7 @@ export class AuthenticationService {
           Logger.error("erreur lors de l'envoi de l'email");
         });
     } catch (e) {
+      this.loginModel.deleteOne({ email: loginDTO.email });
       throw new BadRequestException("erreur lors de l'enregistrement");
     }
   }
@@ -104,7 +109,7 @@ export class AuthenticationService {
     // regex pour valider l'adresse email
     const emailRegex = /^\S+@\S+\.\S+$/;
 
-    if (!loginDTO.email) {
+    if (!loginDTO.email || !emailRegex.test(loginDTO.email)) {
       throw new BadRequestException('email invalide');
     }
 
