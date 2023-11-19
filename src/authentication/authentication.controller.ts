@@ -1,6 +1,6 @@
 import { Body, Controller, HttpCode, Post, Query } from '@nestjs/common';
 import { AuthenticationService } from './authentication.service';
-import { LoginDTO } from './dto/LoginDTO';
+import { LoginDTO, RegisterDTO } from './dto/LoginDTO';
 import { ROLE } from './auth.types';
 
 @Controller('auth')
@@ -10,10 +10,10 @@ export class AuthenticationController {
   @Post('register')
   @HttpCode(201)
   async register(
-    @Body() loginDTO: LoginDTO,
+    @Body() registerDTO: RegisterDTO,
     @Query('role') role: Omit<'ADMIN', ROLE>,
   ) {
-    await this.authService.register(loginDTO, role);
+    await this.authService.register(registerDTO, role);
     return { message: 'utilisateur enregistré' };
   }
 

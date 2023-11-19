@@ -8,27 +8,31 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Login } from './authentication.schema';
 import { Model } from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
-import { LoginDTO } from './dto/LoginDTO';
+import { LoginDTO, RegisterDTO } from './dto/LoginDTO';
 import { HashingService } from './hashing.service';
 import { ROLE } from './auth.types';
 import { MailerService } from '@nestjs-modules/mailer';
+import { Client } from './../client/client.schema';
+import { Avocat } from './../advocate/advocate.schema';
 
 @Injectable()
 export class AuthenticationService {
   constructor(
     @InjectModel(Login.name) private readonly loginModel: Model<Login>,
+    @InjectModel(Client.name) private readonly clientModel: Model<Client>,
+    @InjectModel(Avocat.name) private readonly avocatModel: Model<Avocat>,
     private jwtService: JwtService,
     private hashingService: HashingService,
     private mailerService: MailerService,
   ) {}
 
-  async register(loginDTO: LoginDTO, role: Omit<'ADMIN', ROLE>) {
+  async register(registerDTO: RegisterDTO, role: Omit<'ADMIN', ROLE>) {
     // valider les informations de l'utilisateur
-    this.validateLoginInfo(loginDTO);
+    this.validateLoginInfo(registerDTO);
     this.validateRole(role);
 
     // verifier l'existance de l'utilisateur dans la base de données
-    const user = await this.loginModel.findOne({ email: loginDTO.email });
+    const user = await this.loginModel.findOne({ email: registerDTO.email });
 
     if (user) {
       throw new BadRequestException('utilisateur existe déjà');
@@ -37,25 +41,23 @@ export class AuthenticationService {
     try {
       // hash le mot de passe avec bcrypt
       const hashedPassword = await this.hashingService.hashpassword(
-        loginDTO.password,
+        registerDTO.password,
       );
 
       // enregistrer l'utilisateur
-      await this.loginModel.create({
-        email: loginDTO.email,
+      const login = await this.loginModel.create({
+        email: registerDTO.email,
         password: hashedPassword,
         actif: true,
         role: role,
       });
-    } catch (e) {
-      throw new BadRequestException("erreur lors de l'enregistrement");
-    }
+      // initialiser le profile
+      await this.initiateProfile(role, registerDTO, login._id.toString());
 
-    try {
       // envoyer un email de salutation
-      this.mailerService
+      await this.mailerService
         .sendMail({
-          to: loginDTO.email,
+          to: registerDTO.email,
           from: 'findmylawyer@mail.com',
           subject: 'Bienvenue',
           text: 'votre compte a été créé avec succès',
@@ -67,12 +69,17 @@ export class AuthenticationService {
           Logger.error("erreur lors de l'envoi de l'email");
         });
     } catch (e) {
-      this.loginModel.deleteOne({ email: loginDTO.email });
+      console.log(e);
+      // rollback en cas d'erreur
+      this.loginModel.deleteOne({ email: registerDTO.email });
+      role === 'CLIENT'
+        ? this.clientModel.deleteOne({ email: registerDTO.email })
+        : this.avocatModel.deleteOne({ email: registerDTO.email });
       throw new BadRequestException("erreur lors de l'enregistrement");
     }
   }
 
-  async login(loginDTO: LoginDTO) {
+  async login(loginDTO: Omit<LoginDTO, 'firstname'>) {
     // valider les informations de l'utilisateur
     this.validateLoginInfo(loginDTO);
 
@@ -123,6 +130,28 @@ export class AuthenticationService {
   private validateRole(role: Omit<'ADMIN', ROLE>) {
     if (role !== 'CLIENT' && role !== 'AVOCAT') {
       throw new BadRequestException('role invalide');
+    }
+  }
+
+  private async initiateProfile(
+    role: Omit<'ADMIN', ROLE>,
+    registerDTO: RegisterDTO,
+    loginId: string,
+  ) {
+    if (role === 'CLIENT') {
+      await this.clientModel.create({
+        firstName: registerDTO.firstName,
+        lastName: registerDTO.lastName,
+        email: registerDTO.email,
+        login: loginId,
+      });
+    } else if (role === 'AVOCAT') {
+      await this.avocatModel.create({
+        prenom: registerDTO.firstName,
+        nom: registerDTO.lastName,
+        email: registerDTO.email,
+        login: loginId,
+      });
     }
   }
 }

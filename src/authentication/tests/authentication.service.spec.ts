@@ -6,6 +6,8 @@ import { Login } from '../authentication.schema';
 import { JwtService } from '@nestjs/jwt';
 import { MailerService } from '@nestjs-modules/mailer';
 import { BadRequestException } from '@nestjs/common';
+import { Avocat } from './../../advocate/advocate.schema';
+import { Client } from './../../client/client.schema';
 
 describe('Authentication Service', () => {
   let service: AuthenticationService;
@@ -16,9 +18,20 @@ describe('Authentication Service', () => {
 
   const hashingServiceMock = new HashingService();
 
-  const userModelMock = {
+  const loginModelMock = {
     findOne: jest.fn(),
     create: jest.fn(),
+    deleteOne: jest.fn(),
+  };
+
+  const clientModelMock = {
+    create: jest.fn(),
+    deleteOne: jest.fn(),
+  };
+
+  const advocateModelMock = {
+    create: jest.fn(),
+    deleteOne: jest.fn(),
   };
 
   const mockMailer = {
@@ -37,10 +50,20 @@ describe('Authentication Service', () => {
           provide: HashingService,
           useValue: hashingServiceMock,
         },
-        // inject mongoose model
+        // mock mongoose login model
         {
           provide: getModelToken(Login.name),
-          useValue: userModelMock,
+          useValue: loginModelMock,
+        },
+        // mock mongoose avocat model
+        {
+          provide: getModelToken(Avocat.name),
+          useValue: advocateModelMock,
+        },
+        // mock mongoose client model
+        {
+          provide: getModelToken(Client.name),
+          useValue: clientModelMock,
         },
         // mock mailer service
         {
@@ -60,30 +83,40 @@ describe('Authentication Service', () => {
   describe('register', () => {
     it('should register user', async () => {
       // arrange
-      jest.spyOn(userModelMock, 'findOne').mockResolvedValueOnce(null);
-      jest.spyOn(userModelMock, 'create').mockResolvedValueOnce(true);
+      jest.spyOn(loginModelMock, 'findOne').mockResolvedValueOnce(null);
+      jest.spyOn(loginModelMock, 'create').mockResolvedValueOnce({ _id: '1' });
       jest.spyOn(mockMailer, 'sendMail').mockResolvedValueOnce(true);
 
       // act
       await service.register(
-        { email: 'khalil@gmail.com', password: 'khalil123' },
+        {
+          firstName: 'khalil',
+          lastName: 'chermiti',
+          email: 'khalil@gmail.com',
+          password: 'khalil123',
+        },
         'CLIENT',
       );
 
       // assert
-      expect(userModelMock.findOne).toBeCalled();
-      expect(userModelMock.create).toBeCalled();
+      expect(loginModelMock.findOne).toBeCalled();
+      expect(loginModelMock.create).toBeCalled();
       expect(mockMailer.sendMail).toBeCalled();
     });
 
     it('should fail on used email', async () => {
       // arrange
-      jest.spyOn(userModelMock, 'findOne').mockResolvedValueOnce({});
+      jest.spyOn(loginModelMock, 'findOne').mockResolvedValueOnce({});
 
       // act
       expect(async () => {
         await service.register(
-          { email: 'khalil@gmail.com', password: 'khalil123' },
+          {
+            firstName: 'khalil',
+            lastName: 'chermiti',
+            email: 'khalil@gmail.com',
+            password: 'khalil123',
+          },
           'CLIENT',
         );
       }).rejects.toThrow(new BadRequestException('utilisateur existe déjà'));
@@ -95,7 +128,12 @@ describe('Authentication Service', () => {
       // act
       expect(async () => {
         await service.register(
-          { email: 'khalil@gmail.com', password: 'khalil123' },
+          {
+            firstName: 'khalil',
+            lastName: 'chermiti',
+            email: 'khalil@gmail.com',
+            password: 'khalil123',
+          },
           'ADMIN', // can't create admin account
         );
       }).rejects.toThrow(new BadRequestException('role invalide'));
@@ -115,7 +153,7 @@ describe('Authentication Service', () => {
         .spyOn(jwtServiceMock, 'signAsync')
         .mockResolvedValueOnce('fjqskdfjljqflsdjflqsjfdkqjlsdkfjqsdlkfjqsljfk');
 
-      jest.spyOn(userModelMock, 'findOne').mockResolvedValueOnce({
+      jest.spyOn(loginModelMock, 'findOne').mockResolvedValueOnce({
         id: 'some_id_jkfjlsjfkq',
         role: 'CLIENT',
       });
@@ -135,7 +173,7 @@ describe('Authentication Service', () => {
         .spyOn(hashingServiceMock, 'verifyPassword')
         .mockResolvedValueOnce(false);
 
-      jest.spyOn(userModelMock, 'findOne').mockResolvedValueOnce({
+      jest.spyOn(loginModelMock, 'findOne').mockResolvedValueOnce({
         id: 'some_id_jkfjlsjfkq',
         role: 'CLIENT',
       });

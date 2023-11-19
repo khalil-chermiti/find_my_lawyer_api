@@ -6,10 +6,14 @@ import { AuthenticationController } from './authentication.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { HashingService } from './hashing.service';
 import { ConfigService } from '@nestjs/config';
+import { Avocat, AvocatSchema } from './../advocate/advocate.schema';
+import { Client, ClientSchema } from './../client/client.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Login.name, schema: LoginSchema }]),
+    MongooseModule.forFeature([{ name: Avocat.name, schema: AvocatSchema }]),
+    MongooseModule.forFeature([{ name: Client.name, schema: ClientSchema }]),
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({

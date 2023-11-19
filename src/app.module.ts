@@ -3,6 +3,8 @@ import { AuthenticationModule } from './authentication/authentication.module';
 import { ConfigModule } from '@nestjs/config';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { DatabaseModule } from './common/database/database.module';
+import { AdvocateModule } from './advocate/advocate.module';
+import { ClientModule } from './client/client.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { DatabaseModule } from './common/database/database.module';
       },
     }),
     AuthenticationModule,
+    AdvocateModule,
+    ClientModule,
   ],
   controllers: [],
   providers: [],
