@@ -13,22 +13,22 @@ export class Avocat extends Document {
   @Prop({ required: true })
   email: string;
 
-  @Prop({ required: false })
+  @Prop({ required: false, default: '' })
   bio: string;
 
-  @Prop({ required: false })
+  @Prop({ required: false, default: '' })
   photoDeProfile: string;
 
-  @Prop({ required: false })
+  @Prop({ required: false, default: '' })
   telephone: string;
 
   @Prop({ default: false })
   verifie: boolean;
 
-  @Prop({ required: false })
+  @Prop({ required: false, default: '' })
   infosVerification: string;
 
-  @Prop({ required: false })
+  @Prop({ required: false, default: -1 })
   ansExperience: number;
 
   @Prop({ default: false })
