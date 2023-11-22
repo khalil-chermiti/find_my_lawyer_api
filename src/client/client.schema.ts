@@ -5,10 +5,10 @@ import { Login } from './../authentication/authentication.schema';
 @Schema()
 export class Client extends Document {
   @Prop({ required: true })
-  firstName: string;
+  nom: string;
 
   @Prop({ required: true })
-  lastName: string;
+  prenom: string;
 
   @Prop({ required: true })
   email: string;

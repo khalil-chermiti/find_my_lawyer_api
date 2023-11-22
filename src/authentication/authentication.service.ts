@@ -69,7 +69,6 @@ export class AuthenticationService {
           Logger.error("erreur lors de l'envoi de l'email");
         });
     } catch (e) {
-      console.log(e);
       // rollback en cas d'erreur
       this.loginModel.deleteOne({ email: registerDTO.email });
       role === 'CLIENT'
@@ -140,8 +139,8 @@ export class AuthenticationService {
   ) {
     if (role === 'CLIENT') {
       await this.clientModel.create({
-        firstName: registerDTO.firstName,
-        lastName: registerDTO.lastName,
+        prenom: registerDTO.firstName,
+        nom: registerDTO.lastName,
         email: registerDTO.email,
         login: loginId,
       });

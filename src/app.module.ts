@@ -5,6 +5,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { DatabaseModule } from './common/database/database.module';
 import { AdvocateModule } from './advocate/advocate.module';
 import { ClientModule } from './client/client.module';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -24,11 +25,14 @@ import { ClientModule } from './client/client.module';
         },
       },
     }),
+    JwtModule.register({
+      global: true,
+      secret: 'this_is_a_secret_key',
+      signOptions: { expiresIn: '1d' },
+    }),
     AuthenticationModule,
     AdvocateModule,
     ClientModule,
   ],
-  controllers: [],
-  providers: [],
 })
 export class AppModule {}
