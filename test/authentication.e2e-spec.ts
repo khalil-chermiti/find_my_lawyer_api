@@ -55,6 +55,8 @@ describe('Authentication Controller(e2e)', () => {
   it('/auth/register (POST)', async () => {
     // arrange
     const LOGIN_TEST_DATA = {
+      firstName: 'user',
+      lastName: 'user',
       email: 'user@mail.com',
       password: 'this_is_my_password',
     };
