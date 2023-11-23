@@ -1,5 +1,6 @@
 import {
   Controller,
+  Get,
   HttpCode,
   InternalServerErrorException,
   Logger,
@@ -7,6 +8,7 @@ import {
   ParseFilePipe,
   Post,
   Req,
+  Request,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -14,6 +16,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '../authentication/guards/AuthGuard';
 import { roleGuardFactory } from '../authentication/guards/RoleGuard';
+import { Avocat } from './advocate.schema';
 import { AdvocateService } from './advocate.service';
 
 @Controller('advocate')
@@ -50,5 +53,11 @@ export class AdvocateController {
       Logger.error("Can't upload file : ");
       throw new InternalServerErrorException("erreur lors de l'upload");
     }
+  }
+  
+  @Get()
+  @HttpCode(200)
+  async getAdvocates(): Promise<Avocat[]> {
+    return await this.advocateService.getActiveAndVerifiedAdvocates();
   }
 }
