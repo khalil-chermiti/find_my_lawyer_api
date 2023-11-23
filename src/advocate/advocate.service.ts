@@ -38,4 +38,17 @@ export class AdvocateService {
       throw new InternalServerErrorException("erreur lors de l'upload");
     }
   }
+
+  // récupérer les avocats
+  async getActiveAndVerifiedAdvocates(): Promise<Avocat[]> {
+    try {
+      return await this.advocateModel.find({active : true , verifie : true}).limit(10);
+    } catch{
+      throw new InternalServerErrorException("erreur lors de la récupération des avocats");
+    }
+  }
+
+  async getAllLAdvocates(): Promise<Avocat[]> {
+    return await this.advocateModel.find().limit(10);
+  }
 }
