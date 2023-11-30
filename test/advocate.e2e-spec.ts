@@ -10,9 +10,10 @@ import {
   StartedDockerComposeEnvironment,
 } from 'testcontainers';
 
-describe.skip('Authentication Controller(e2e)', () => {
+describe('Advocate Controller(e2e)', () => {
   let dockerCompose: StartedDockerComposeEnvironment;
   let databaseConnection: Connection;
+  let moduleFixture: TestingModule;
   let app: INestApplication;
   let server: any;
 
@@ -27,7 +28,7 @@ describe.skip('Authentication Controller(e2e)', () => {
     ).up(['mongo']);
 
     // start nestjs app
-    const moduleFixture: TestingModule = await Test.createTestingModule({
+    moduleFixture = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
@@ -49,53 +50,46 @@ describe.skip('Authentication Controller(e2e)', () => {
   });
 
   beforeEach(async () => {
-    await databaseConnection.collection('logins').deleteMany({});
+    await databaseConnection.collection('avocats').deleteMany({});
   });
 
-  it('/auth/register (POST)', async () => {
+  it('should be defined', () => {
+    expect(moduleFixture).toBeDefined();
+  });
+
+  it('/advocate/ (GET)' , async () => {
     // arrange
-    const LOGIN_TEST_DATA = {
-      firstName: 'user',
-      lastName: 'user',
-      email: 'user@mail.com',
-      password: 'this_is_my_password',
-    };
+    const listOfAdvocates = [
+      {
+        id: 1,
+        name: 'advocate1',
+        email: 'advocate@mail.com',
+        active: true,
+        verifie: true,
+      },
+      {
+        id: 2,
+        name: 'advocate2',
+        email: 'advocate2@mail.com',
+        verifie: true,
+        active: true,
+      },
+      {
+        id: 3,
+        name: 'advocate3',
+        email: 'advocate@mail.com',
+        active: false,
+        verifie: false,
+      },
+    ];
+
+    await databaseConnection.collection('avocats').insertMany(listOfAdvocates);
 
     // act
-    const response = await request(server)
-      .post('/auth/register')
-      .query({ role: 'CLIENT' })
-      .send(LOGIN_TEST_DATA);
+    const response = await request(server).get('/advocate');
 
     // assert
-    expect(response.body).toHaveProperty('message');
-    expect(response.statusCode).toBe(201);
-  });
-
-  it('/auth/login (POST)', async () => {
-    // arrange
-    const LOGIN_TEST_DATA = {
-      email: 'user@gmail.com',
-      password: 'this_is_my_password',
-    };
-
-    const HASHED_PASSWORD =
-      '$2a$12$Kls8bzCZQAE0pLAXsgSPcuPPio2sf7.t2HsrFEvwjFFuyJ6eH0Z3u';
-
-    await databaseConnection.collection('logins').insertOne({
-      email: LOGIN_TEST_DATA.email,
-      password: HASHED_PASSWORD,
-      role: 'CLIENT',
-      actif: true,
-    });
-
-    // act
-    const response = await request(server)
-      .post('/auth/login')
-      .send(LOGIN_TEST_DATA);
-
-    // assert
-    expect(response.body).toHaveProperty('token');
-    expect(response.statusCode).toBe(200);
-  });
-});
+    expect(response.status).toBe(200);
+    expect(response.body.length).toBe(2);
+  }) 
+})

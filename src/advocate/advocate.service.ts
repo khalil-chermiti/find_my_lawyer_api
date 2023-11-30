@@ -1,8 +1,15 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UploadService } from './../common/upload/upload.service';
-import { Avocat } from './advocate.schema';
+import { Avocat, PROJECT_SENSITIVE_FIELDS } from './advocate.schema';
+import { SearchAdvocateDTO } from './dto/SearchAdvocateDTO';
+import { faker } from '@faker-js/faker';
+import { DOMAINES_DE_DROIT } from 'src/common/data/data';
 
 @Injectable()
 export class AdvocateService {
@@ -39,16 +46,91 @@ export class AdvocateService {
     }
   }
 
-  // récupérer les avocats
+  // récupérer les avocats pour l'internaute
   async getActiveAndVerifiedAdvocates(): Promise<Avocat[]> {
     try {
-      return await this.advocateModel.find({active : true , verifie : true}).limit(10);
-    } catch{
-      throw new InternalServerErrorException("erreur lors de la récupération des avocats");
+      return await this.advocateModel
+        .find({ active: true, verifie: true })
+        .limit(10);
+    } catch {
+      throw new InternalServerErrorException(
+        'erreur lors de la récupération des avocats',
+      );
+    }
+  }
+  // récupérer les avocats pour l'admin
+  async getAllLAdvocates(): Promise<Avocat[]> {
+    return await this.advocateModel.find().limit(10);
+  }
+
+  async searchAdvocate(
+    searchAdvocateDTO: SearchAdvocateDTO,
+  ): Promise<Avocat[]> {
+    try {
+      const searchAdvocateDTOFields = this.getDefinedFields(searchAdvocateDTO);
+
+      searchAdvocateDTOFields['active'] = true;
+      searchAdvocateDTOFields['verifie'] = true;
+
+      return await this.advocateModel
+        .find(searchAdvocateDTOFields, PROJECT_SENSITIVE_FIELDS)
+        .limit(10);
+    } catch (error) {
+      Logger.log("erreur lors de la recherche d'avocat", error);
+      throw new InternalServerErrorException(
+        'erreur lors de la récupération des avocats',
+      );
     }
   }
 
-  async getAllLAdvocates(): Promise<Avocat[]> {
-    return await this.advocateModel.find().limit(10);
+  async getNonVerifiedAdvocates(): Promise<Avocat[]> {
+    return await this.advocateModel.find({ verifie: false }).limit(10);
+  }
+
+  async getAdvocateByName(name: string): Promise<Avocat> {
+    return await this.advocateModel.findOne({ nom: new RegExp(name, 'i') });
+  }
+
+  async acceptAdvocate(Advocate_id: string): Promise<void> {
+    await this.advocateModel
+      .updateOne({ _id: Advocate_id }, { $set: { verifie: true } })
+      .exec();
+  }
+
+  // creer un objet contenant les champs non nulls de l'objet searchAdvocateDTO
+  private getDefinedFields(searchAdvocateDTO: SearchAdvocateDTO) {
+    const searchAdvocateDTOFields = {};
+
+    for (const [key, value] of Object.entries(searchAdvocateDTO)) {
+      // map key to schema field using regex
+      if (value) searchAdvocateDTOFields[key] = new RegExp(value, 'i');
+    }
+
+    return searchAdvocateDTOFields;
+  }
+
+  // generer liste des avocats pour tester notre api
+  async populate() {
+    await this.advocateModel.deleteMany({});
+
+    for (let i = 0; i < 10; i++) {
+      const avocat = {
+        nom: faker.person.lastName(),
+        prenom: faker.person.firstName(),
+        email: faker.internet.email(),
+        ville: faker.address.city(),
+        active: true,
+        verifie: true,
+        ansExperience: faker.datatype.number({ min: 0, max: 50 }),
+        aideJuridique: faker.datatype.boolean(),
+        bio: faker.lorem.paragraph(),
+        telephone: faker.phone.number(),
+        specialite:
+          DOMAINES_DE_DROIT[
+            faker.number.int({ min: 0, max: DOMAINES_DE_DROIT.length - 1 })
+          ],
+      };
+      await this.advocateModel.create(avocat);
+    }
   }
 }

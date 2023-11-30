@@ -3,6 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Login } from './authentication.schema';
@@ -17,6 +18,7 @@ import { Avocat } from './../advocate/advocate.schema';
 
 @Injectable()
 export class AuthenticationService {
+  advocateService: any;
   constructor(
     @InjectModel(Login.name) private readonly loginModel: Model<Login>,
     @InjectModel(Client.name) private readonly clientModel: Model<Client>,
