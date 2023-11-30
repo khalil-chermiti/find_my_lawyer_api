@@ -39,6 +39,12 @@ export class Avocat extends Document {
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Login' })
   login: Login;
+
+  @Prop({ required: false, default: '' })
+  ville: string;
+
+  @Prop({ required: false, default: [] })
+  specialite: string;
 }
 
 export const AvocatSchema = SchemaFactory.createForClass(Avocat);

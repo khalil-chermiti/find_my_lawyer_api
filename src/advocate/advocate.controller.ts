@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Get,
   HttpCode,
@@ -18,6 +19,7 @@ import { AuthGuard } from '../authentication/guards/AuthGuard';
 import { roleGuardFactory } from '../authentication/guards/RoleGuard';
 import { Avocat } from './advocate.schema';
 import { AdvocateService } from './advocate.service';
+import { SearchAdvocateDTO } from './dto/SearchAdvocateDTO';
 
 @Controller('advocate')
 export class AdvocateController {
@@ -54,10 +56,24 @@ export class AdvocateController {
       throw new InternalServerErrorException("erreur lors de l'upload");
     }
   }
-  
+
+  // Consulter la liste des avocats
   @Get()
   @HttpCode(200)
   async getAdvocates(): Promise<Avocat[]> {
     return await this.advocateService.getActiveAndVerifiedAdvocates();
+  }
+
+  //chercher un avocat
+  @Post('search')
+  async searchAvocats(
+    @Body() searchAdvocateDTO: SearchAdvocateDTO,
+  ): Promise<Avocat[]> {
+    return this.advocateService.searchAdvocate(searchAdvocateDTO);
+  }
+
+  @Post('populate')
+  async populate() {
+    await this.advocateService.populate();
   }
 }

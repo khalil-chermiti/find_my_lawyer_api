@@ -1,8 +1,13 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UploadService } from './../common/upload/upload.service';
 import { Avocat } from './advocate.schema';
+import { SearchAdvocateDTO } from './dto/SearchAdvocateDTO';
 
 @Injectable()
 export class AdvocateService {
@@ -39,16 +44,77 @@ export class AdvocateService {
     }
   }
 
-  // récupérer les avocats
+  // récupérer les avocats pour l'internaute
   async getActiveAndVerifiedAdvocates(): Promise<Avocat[]> {
     try {
-      return await this.advocateModel.find({active : true , verifie : true}).limit(10);
-    } catch{
-      throw new InternalServerErrorException("erreur lors de la récupération des avocats");
+      return await this.advocateModel
+        .find({ active: true, verifie: true })
+        .limit(10);
+    } catch {
+      throw new InternalServerErrorException(
+        'erreur lors de la récupération des avocats',
+      );
+    }
+  }
+  // récupérer les avocats pour l'admin
+  async getAllLAdvocates(): Promise<Avocat[]> {
+    return await this.advocateModel.find().limit(10);
+  }
+
+  // AMAL : rechercher un avocat
+  async searchAdvocate(
+    searchAdvocateDTO: SearchAdvocateDTO,
+  ): Promise<Avocat[]> {
+    try {
+      const { firstName, lastName, city, speciality } = searchAdvocateDTO;
+
+      if (
+        firstName === null &&
+        lastName === null &&
+        city === null &&
+        speciality === null
+      )
+        throw new InternalServerErrorException(
+          'veuillez saisir un critère de recherche',
+        );
+
+      return await this.advocateModel
+        .find({
+          prenom: { $regex: firstName },
+          // nom: { $regex: lastName },
+          // ville: { $regex: city },
+          // specialite: { $in: speciality }, // find in array
+        })
+        .limit(10);
+    } catch (error) {
+      Logger.log("erreur lors de la recherche d'avocat", error);
+      throw new InternalServerErrorException(
+        'erreur lors de la récupération des avocats',
+      );
     }
   }
 
-  async getAllLAdvocates(): Promise<Avocat[]> {
-    return await this.advocateModel.find().limit(10);
+  // generer liste des avocats pour tester notre api
+  async populate() {
+    const avocats = [
+      {
+        nom: 'ben salah',
+        prenom: 'mohamed',
+        email: 'salah@mail.com',
+        ville: 'tunis',
+        specialite: ['droit civil', 'droit penal'],
+      },
+      {
+        nom: 'troudi',
+        prenom: 'amal',
+        email: 'amal@mail.com',
+        ville: 'ariana',
+        specialite: ['droit civil', 'droit public'],
+      },
+    ];
+
+    avocats.forEach(async (avocat) => {
+      await this.advocateModel.create(avocat);
+    });
   }
 }

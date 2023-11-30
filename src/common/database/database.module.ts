@@ -10,6 +10,7 @@ import { ConfigService } from '@nestjs/config';
       useFactory: (configService: ConfigService) => ({
         uri: configService.get<string>('MONGODB_URL'),
         dbName: configService.get<string>('MONGODB_DB_NAME'),
+        ignoreUndefined: true,
       }),
     }),
   ],
