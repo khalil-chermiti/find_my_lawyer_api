@@ -117,4 +117,18 @@ export class AdvocateService {
       await this.advocateModel.create(avocat);
     });
   }
+
+  async getNonVerifiedAdvocates(): Promise<Avocat[]> {
+    return await this.advocateModel.find({ verifie: false }).limit(10);
+  }
+
+  async getAdvocateByName(name: string): Promise<Avocat> {
+    return await this.advocateModel.findOne({ nom: name });
+  }
+
+  async acceptAdvocate(Advocate_id: string): Promise<void> {
+    await this.advocateModel
+      .updateOne({ _id: Advocate_id }, { $set: { verifie: true } })
+      .exec();
+  }
 }

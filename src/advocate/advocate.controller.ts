@@ -6,6 +6,7 @@ import {
   InternalServerErrorException,
   Logger,
   MaxFileSizeValidator,
+  Param,
   ParseFilePipe,
   Post,
   Req,
@@ -75,5 +76,62 @@ export class AdvocateController {
   @Post('populate')
   async populate() {
     await this.advocateService.populate();
+  }
+
+  @Get("/all")
+  @UseGuards(roleGuardFactory("ADMIN"))
+  @UseGuards(AuthGuard)
+  @HttpCode(200)
+  async getAllAdvocates(): Promise<Avocat[]> {
+    try {
+      return await this.advocateService.getAllLAdvocates();
+    } catch(e) {
+      Logger.log("error while getting all advocate list" , e);
+      throw new InternalServerErrorException("erreur lors de la récupération des avocats");
+    }
+  }
+
+  @Get("/non-verified")
+  @UseGuards(roleGuardFactory("ADMIN"))
+  @UseGuards(AuthGuard)
+  @HttpCode(200)
+  async getNonVerifiedAdvocates(): Promise<Avocat[]> {
+    try {
+      return await this.advocateService.getNonVerifiedAdvocates();
+    } catch(e) {
+      Logger.log("error while getting all advocate list" , e);
+      throw new InternalServerErrorException("erreur lors de la récupération des avocats");
+    }
+  }
+
+  // WARNING : keep this route at the end of the file
+  // TODO : implement pagination
+  // TODO : implement regex search
+  @Get(":name")
+  @UseGuards(roleGuardFactory("ADMIN"))
+  @UseGuards(AuthGuard)
+  @HttpCode(200)
+  async getAdvocateByName(@Param() params : any): Promise<Avocat> {
+    if (!params.name) throw new InternalServerErrorException("name of advocate is required");
+    try {
+      return await this.advocateService.getAdvocateByName(params.name);
+    } catch(e) {
+      Logger.log("error while getting advocate by name" , e);
+      throw new InternalServerErrorException("erreur lors de la récupération de l'avocat");
+    }
+  }
+
+  @Post("/accept/:id")
+  @UseGuards(roleGuardFactory("ADMIN"))
+  @UseGuards(AuthGuard)
+  @HttpCode(200)
+  async acceptAdvocate(@Param() params : any): Promise<void> {
+    if (!params.id) throw new InternalServerErrorException("id of advocate is required");
+    try {
+      await this.advocateService.acceptAdvocate(params.id);
+    } catch (e) {
+      Logger.log("error while accepting advocate" , e);
+      throw new InternalServerErrorException("erreur lors de l'acceptation de l'avocat");
+    }
   }
 }
