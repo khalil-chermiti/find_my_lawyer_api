@@ -37,14 +37,20 @@ export class Avocat extends Document {
   @Prop({ default: false })
   active: boolean;
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Login' })
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Login', required: false })
   login: Login;
 
   @Prop({ required: false, default: '' })
   ville: string;
 
   @Prop({ required: false, default: [] })
-  specialite: string;
+  specialite: string[];
 }
+
+export const PROJECT_SENSITIVE_FIELDS = {
+  __v: 0,
+  active: 0,
+  login: 0,
+};
 
 export const AvocatSchema = SchemaFactory.createForClass(Avocat);

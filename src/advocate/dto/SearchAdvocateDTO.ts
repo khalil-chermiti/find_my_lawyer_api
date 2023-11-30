@@ -1,9 +1,9 @@
 export class SearchAdvocateDTO {
-  public firstName: string;
+  public prenom: string;
 
-  public lastName: string;
+  public nom: string;
 
-  public city: string;
+  public ville: string;
 
-  public speciality: string;
+  public specialite: string;
 }

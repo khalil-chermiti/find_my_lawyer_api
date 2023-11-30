@@ -6,8 +6,10 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { UploadService } from './../common/upload/upload.service';
-import { Avocat } from './advocate.schema';
+import { Avocat, PROJECT_SENSITIVE_FIELDS } from './advocate.schema';
 import { SearchAdvocateDTO } from './dto/SearchAdvocateDTO';
+import { faker } from '@faker-js/faker';
+import { DOMAINES_DE_DROIT } from 'src/common/data/data';
 
 @Injectable()
 export class AdvocateService {
@@ -61,30 +63,17 @@ export class AdvocateService {
     return await this.advocateModel.find().limit(10);
   }
 
-  // AMAL : rechercher un avocat
   async searchAdvocate(
     searchAdvocateDTO: SearchAdvocateDTO,
   ): Promise<Avocat[]> {
     try {
-      const { firstName, lastName, city, speciality } = searchAdvocateDTO;
+      const searchAdvocateDTOFields = this.getDefinedFields(searchAdvocateDTO);
 
-      if (
-        firstName === null &&
-        lastName === null &&
-        city === null &&
-        speciality === null
-      )
-        throw new InternalServerErrorException(
-          'veuillez saisir un critère de recherche',
-        );
+      searchAdvocateDTOFields['active'] = true;
+      searchAdvocateDTOFields['verifie'] = true;
 
       return await this.advocateModel
-        .find({
-          prenom: { $regex: firstName },
-          // nom: { $regex: lastName },
-          // ville: { $regex: city },
-          // specialite: { $in: speciality }, // find in array
-        })
+        .find(searchAdvocateDTOFields, PROJECT_SENSITIVE_FIELDS)
         .limit(10);
     } catch (error) {
       Logger.log("erreur lors de la recherche d'avocat", error);
@@ -94,41 +83,54 @@ export class AdvocateService {
     }
   }
 
-  // generer liste des avocats pour tester notre api
-  async populate() {
-    const avocats = [
-      {
-        nom: 'ben salah',
-        prenom: 'mohamed',
-        email: 'salah@mail.com',
-        ville: 'tunis',
-        specialite: ['droit civil', 'droit penal'],
-      },
-      {
-        nom: 'troudi',
-        prenom: 'amal',
-        email: 'amal@mail.com',
-        ville: 'ariana',
-        specialite: ['droit civil', 'droit public'],
-      },
-    ];
-
-    avocats.forEach(async (avocat) => {
-      await this.advocateModel.create(avocat);
-    });
-  }
-
   async getNonVerifiedAdvocates(): Promise<Avocat[]> {
     return await this.advocateModel.find({ verifie: false }).limit(10);
   }
 
   async getAdvocateByName(name: string): Promise<Avocat> {
-    return await this.advocateModel.findOne({ nom: name });
+    return await this.advocateModel.findOne({ nom: new RegExp(name, 'i') });
   }
 
   async acceptAdvocate(Advocate_id: string): Promise<void> {
     await this.advocateModel
       .updateOne({ _id: Advocate_id }, { $set: { verifie: true } })
       .exec();
+  }
+
+  // creer un objet contenant les champs non nulls de l'objet searchAdvocateDTO
+  private getDefinedFields(searchAdvocateDTO: SearchAdvocateDTO) {
+    const searchAdvocateDTOFields = {};
+
+    for (const [key, value] of Object.entries(searchAdvocateDTO)) {
+      // map key to schema field using regex
+      if (value) searchAdvocateDTOFields[key] = new RegExp(value, 'i');
+    }
+
+    return searchAdvocateDTOFields;
+  }
+
+  // generer liste des avocats pour tester notre api
+  async populate() {
+    await this.advocateModel.deleteMany({});
+
+    for (let i = 0; i < 10; i++) {
+      const avocat = {
+        nom: faker.person.lastName(),
+        prenom: faker.person.firstName(),
+        email: faker.internet.email(),
+        ville: faker.address.city(),
+        active: true,
+        verifie: true,
+        ansExperience: faker.datatype.number({ min: 0, max: 50 }),
+        aideJuridique: faker.datatype.boolean(),
+        bio: faker.lorem.paragraph(),
+        telephone: faker.phone.number(),
+        specialite:
+          DOMAINES_DE_DROIT[
+            faker.number.int({ min: 0, max: DOMAINES_DE_DROIT.length - 1 })
+          ],
+      };
+      await this.advocateModel.create(avocat);
+    }
   }
 }
