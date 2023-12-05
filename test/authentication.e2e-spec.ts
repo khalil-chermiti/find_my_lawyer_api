@@ -10,7 +10,7 @@ import {
   StartedDockerComposeEnvironment,
 } from 'testcontainers';
 
-describe.skip('Authentication Controller(e2e)', () => {
+describe('Authentication Controller(e2e)', () => {
   let dockerCompose: StartedDockerComposeEnvironment;
   let databaseConnection: Connection;
   let app: INestApplication;

@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { Document } from 'mongoose';
+import mongoose, { Document, SchemaType, SchemaTypes } from 'mongoose';
 import { Login } from './../authentication/authentication.schema';
 
 @Schema()
@@ -40,11 +40,31 @@ export class Avocat extends Document {
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Login', required: false })
   login: Login;
 
-  @Prop({ required: false, default: '' })
-  ville: string;
-
   @Prop({ required: false, default: [] })
   specialite: string[];
+
+  @Prop({ required: false, default: '' })
+  diplome: string;
+
+  @Prop({ required: false, default: [] })
+  langues: string[];
+
+  @Prop({ required: false, default: [] })
+  honoraires: string[];
+
+  @Prop({ required: false, default: [] })
+  moyenDePaiement: string[];
+
+  @Prop({
+    required: false,
+    type: mongoose.Schema.Types.Mixed,
+    default: {
+      ville: '',
+      rue: '',
+      codePostal: '',
+    },
+  })
+  adresse: {};
 }
 
 export const PROJECT_SENSITIVE_FIELDS = {

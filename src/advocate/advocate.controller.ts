@@ -14,6 +14,8 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '../authentication/guards/AuthGuard';
@@ -21,6 +23,7 @@ import { roleGuardFactory } from '../authentication/guards/RoleGuard';
 import { Avocat } from './advocate.schema';
 import { AdvocateService } from './advocate.service';
 import { SearchAdvocateDTO } from './dto/SearchAdvocateDTO';
+import { UpdateProfileDTO } from './dto/UpdateProfileDTO';
 
 @Controller('advocate')
 export class AdvocateController {
@@ -138,6 +141,24 @@ export class AdvocateController {
       Logger.log('error while accepting advocate', e);
       throw new InternalServerErrorException(
         "erreur lors de l'acceptation de l'avocat",
+      );
+    }
+  }
+
+  @Post('/update')
+  @UseGuards(roleGuardFactory('AVOCAT'))
+  @UseGuards(AuthGuard)
+  @HttpCode(200)
+  async updateAdvocate(
+    @Body() advocate: UpdateProfileDTO,
+    @Req() req: Request,
+  ) {
+    try {
+      await this.advocateService.updateAdvocate(advocate, req['user'].id);
+    } catch (e) {
+      Logger.log('error while updating advocate', e);
+      throw new InternalServerErrorException(
+        "erreur lors de la mise à jour de l'avocat",
       );
     }
   }

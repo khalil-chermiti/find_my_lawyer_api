@@ -9,7 +9,8 @@ import { UploadService } from './../common/upload/upload.service';
 import { Avocat, PROJECT_SENSITIVE_FIELDS } from './advocate.schema';
 import { SearchAdvocateDTO } from './dto/SearchAdvocateDTO';
 import { faker } from '@faker-js/faker';
-import { DOMAINES_DE_DROIT } from 'src/common/data/data';
+import { DOMAINES_DE_DROIT } from '../common/data/ADVOCATE_DATA';
+import { UpdateProfileDTO } from './dto/UpdateProfileDTO';
 
 @Injectable()
 export class AdvocateService {
@@ -101,9 +102,17 @@ export class AdvocateService {
   private getDefinedFields(searchAdvocateDTO: SearchAdvocateDTO) {
     const searchAdvocateDTOFields = {};
 
+    // map key to schema field using regex
     for (const [key, value] of Object.entries(searchAdvocateDTO)) {
-      // map key to schema field using regex
-      if (value) searchAdvocateDTOFields[key] = new RegExp(value, 'i');
+      if (value === null) continue;
+
+      // ville => adresse.ville
+      if (key === 'ville') {
+        searchAdvocateDTOFields['adresse.ville'] = new RegExp(value, 'i');
+        continue;
+      }
+
+      searchAdvocateDTOFields[key] = new RegExp(value, 'i');
     }
 
     return searchAdvocateDTOFields;
@@ -118,7 +127,11 @@ export class AdvocateService {
         nom: faker.person.lastName(),
         prenom: faker.person.firstName(),
         email: faker.internet.email(),
-        ville: faker.address.city(),
+        adresse: {
+          ville: faker.address.city(),
+          rue: faker.address.streetAddress(),
+          codePostal: faker.address.zipCode(),
+        },
         active: true,
         verifie: true,
         ansExperience: faker.datatype.number({ min: 0, max: 50 }),
@@ -132,5 +145,40 @@ export class AdvocateService {
       };
       await this.advocateModel.create(avocat);
     }
+  }
+
+  async updateAdvocate(advocate: UpdateProfileDTO, id: any) {
+    const advocateFields = this.getDefinedFieldsForUpdate(advocate);
+
+    try {
+      await this.advocateModel
+        .findOneAndUpdate({ login: id }, advocateFields)
+        .exec();
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'erreur lors de la mise à jour de données',
+      );
+    }
+  }
+
+  private getDefinedFieldsForUpdate(advocate: UpdateProfileDTO) {
+    const CANT_BE_UPDATED = [
+      'email',
+      'verifie',
+      'active',
+      'login',
+      'infosVerification',
+    ];
+
+    const advocateFields = {};
+
+    // map key to schema field using regex
+    for (const [key, value] of Object.entries(advocate)) {
+      if (value === null) continue;
+      if (CANT_BE_UPDATED.includes(key)) continue;
+      advocateFields[key] = value;
+    }
+
+    return advocateFields;
   }
 }
