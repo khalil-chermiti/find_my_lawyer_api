@@ -57,7 +57,7 @@ describe('Advocate Controller(e2e)', () => {
     expect(moduleFixture).toBeDefined();
   });
 
-  it('/advocate/ (GET)' , async () => {
+  it('/advocate/ (GET)', async () => {
     // arrange
     const listOfAdvocates = [
       {
@@ -91,5 +91,5 @@ describe('Advocate Controller(e2e)', () => {
     // assert
     expect(response.status).toBe(200);
     expect(response.body.length).toBe(2);
-  }) 
-})
+  });
+});

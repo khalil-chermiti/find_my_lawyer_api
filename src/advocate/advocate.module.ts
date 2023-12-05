@@ -1,4 +1,4 @@
-import { ConfigurableModuleBuilder, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AdvocateController } from './advocate.controller';
 import { AdvocateService } from './advocate.service';
 import { UploadModule } from '../common/upload/upload.module';
