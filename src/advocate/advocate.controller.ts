@@ -14,8 +14,6 @@ import {
   UploadedFile,
   UseGuards,
   UseInterceptors,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '../authentication/guards/AuthGuard';
@@ -107,23 +105,6 @@ export class AdvocateController {
       Logger.log('error while getting all advocate list', e);
       throw new InternalServerErrorException(
         'erreur lors de la récupération des avocats',
-      );
-    }
-  }
-
-  @Get(':name')
-  @UseGuards(roleGuardFactory('ADMIN'))
-  @UseGuards(AuthGuard)
-  @HttpCode(200)
-  async getAdvocateByName(@Param() params: any): Promise<Avocat> {
-    if (!params.name)
-      throw new InternalServerErrorException('name of advocate is required');
-    try {
-      return await this.advocateService.getAdvocateByName(params.name);
-    } catch (e) {
-      Logger.log('error while getting advocate by name', e);
-      throw new InternalServerErrorException(
-        "erreur lors de la récupération de l'avocat",
       );
     }
   }

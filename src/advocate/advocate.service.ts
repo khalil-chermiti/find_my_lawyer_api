@@ -150,6 +150,14 @@ export class AdvocateService {
   async updateAdvocate(advocate: UpdateProfileDTO, id: any) {
     const advocateFields = this.getDefinedFieldsForUpdate(advocate);
 
+    // supprimer les champs qui ne peuvent pas être mis à jour
+    delete advocateFields['email'];
+    delete advocateFields['login'];
+    delete advocateFields['verifie'];
+    delete advocateFields['photoDeProfile'];
+    delete advocateFields['infosVerification'];
+    delete advocateFields['active'];
+
     try {
       await this.advocateModel
         .findOneAndUpdate({ login: id }, advocateFields)
