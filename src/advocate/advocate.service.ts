@@ -11,6 +11,7 @@ import { SearchAdvocateDTO } from './dto/SearchAdvocateDTO';
 import { faker } from '@faker-js/faker';
 import { DOMAINES_DE_DROIT } from '../common/data/ADVOCATE_DATA';
 import { UpdateProfileDTO } from './dto/UpdateProfileDTO';
+import { warn } from 'console';
 
 @Injectable()
 export class AdvocateService {
@@ -98,6 +99,15 @@ export class AdvocateService {
       .exec();
   }
 
+  async getAdvocateByLoginId(loginId: string): Promise<Avocat> {
+    return await this.advocateModel.findOne(
+      { login: loginId },
+      {
+        __v: 0,
+      },
+    );
+  }
+
   // creer un objet contenant les champs non nulls de l'objet searchAdvocateDTO
   private getDefinedFields(searchAdvocateDTO: SearchAdvocateDTO) {
     const searchAdvocateDTOFields = {};
@@ -158,10 +168,13 @@ export class AdvocateService {
     delete advocateFields['infosVerification'];
     delete advocateFields['active'];
 
+    for (const [key, value] of Object.entries(advocateFields)) {
+      if (value === null || value === "") delete advocateFields[key]; // supprimer les champs nulls
+    }
+
     try {
-      await this.advocateModel
-        .findOneAndUpdate({ login: id }, advocateFields)
-        .exec();
+      console.log(advocateFields);
+      await this.advocateModel.findOneAndUpdate({ login: id }, advocateFields);
     } catch (error) {
       throw new InternalServerErrorException(
         'erreur lors de la mise à jour de données',

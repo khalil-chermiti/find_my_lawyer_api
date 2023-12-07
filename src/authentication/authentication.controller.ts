@@ -1,11 +1,11 @@
-import { Body, Controller, HttpCode, Post, Query } from '@nestjs/common';
+import { Body, Controller, HttpCode, Logger, Post, Query } from '@nestjs/common';
 import { AuthenticationService } from './authentication.service';
 import { LoginDTO, RegisterDTO } from './dto/LoginDTO';
 import { ROLE } from './auth.types';
 
 @Controller('auth')
 export class AuthenticationController {
-  constructor(private authService: AuthenticationService) {}
+  constructor(private authService: AuthenticationService) { }
 
   @Post('register')
   @HttpCode(201)
@@ -20,6 +20,7 @@ export class AuthenticationController {
   @Post('login')
   @HttpCode(200)
   async login(@Body() loginDTO: LoginDTO) {
-    return this.authService.login(loginDTO);
+    const response = await this.authService.login(loginDTO);
+    return response;
   }
 }

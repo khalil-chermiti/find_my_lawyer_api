@@ -66,6 +66,16 @@ export class AdvocateController {
     return await this.advocateService.getActiveAndVerifiedAdvocates();
   }
 
+  // retourner le profile d'avocat actuellement connecté
+  @Get('profile')
+  @UseGuards(roleGuardFactory('ADMIN'))
+  @UseGuards(AuthGuard)
+  @HttpCode(200)
+  async getCurrentProfileData(@Req() req: Request): Promise<Avocat> {
+    const user = req['user'];
+    return await this.advocateService.getAdvocateByLoginId(user.id);
+  }
+
   //chercher un avocat
   @Post('search')
   async searchAvocats(
@@ -136,6 +146,9 @@ export class AdvocateController {
   ) {
     try {
       await this.advocateService.updateAdvocate(advocate, req['user'].id);
+      return {
+        message: 'profile mis à jour',
+      };
     } catch (e) {
       Logger.log('error while updating advocate', e);
       throw new InternalServerErrorException(

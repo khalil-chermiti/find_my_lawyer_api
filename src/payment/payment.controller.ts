@@ -5,6 +5,7 @@ import {
   Logger,
   Post,
   Query,
+  Redirect,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -42,6 +43,7 @@ export class PaymentController {
   }
 
   @HttpCode(200)
+  @Redirect('http://localhost:5173/advocate')
   @Get('/success')
   async handleSuccess(@Query('id') id: string) {
     Logger.log('payment success for user with id : ', id);

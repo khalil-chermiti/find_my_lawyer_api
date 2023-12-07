@@ -105,7 +105,7 @@ export class AuthenticationService {
     // generer le token
     try {
       const token = await this.jwtService.signAsync(payload);
-      return { token: token };
+      return { token: token, role: login.role };
     } catch (e) {
       Logger.error(e);
       throw new InternalServerErrorException();
